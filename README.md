@@ -4,7 +4,7 @@ Features:
 
 
 Usage:
-* Users with the administrator role can use .hello and .goodbye to toggle greetings.
+* Users with the administrator role can use **.hello** and **.goodbye** to toggle greetings.
 * Greetings are sent to the system channel. If it does not exist, they are sent to the 'newcomers' and 'leavers' channels.
 
 Ideas/TODOs:

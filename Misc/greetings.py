@@ -10,8 +10,8 @@ class Greetings(commands.Cog):
         self.bot = bot
         self._last_member = None
 
+    # Only admins are allowed to use commands within this cog.
     async def cog_check(self, ctx):
-        # Check if  user has admin role
         return ctx.author.guild_permissions.administrator
 
     @commands.Cog.listener()
