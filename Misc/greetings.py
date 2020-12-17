@@ -11,7 +11,7 @@ class Greetings(commands.Cog):
         self._last_member = None
 
     async def cog_check(self, ctx):
-        # Check if user has admin role
+        # Check if  user has admin role
         return ctx.author.guild_permissions.administrator
 
     @commands.Cog.listener()
