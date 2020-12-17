@@ -1,6 +1,11 @@
 import discord
 from discord.ext import commands
 
+from dotenv import load_dotenv
+load_dotenv()
+
+import os
+
 intents = discord.Intents.default()
 intents.members = True
 #
@@ -48,4 +53,4 @@ async def on_ready():
 
 print('Version: ' + discord.__version__)
 print(f'Version info: {discord.version_info}')
-bot.run('Nzg4OTk1NDE1MDA0NDEzOTgy.X9rnPQ.O80ABdrY7VWAZcJEzDxdXhaMPHc')
+bot.run(os.getenv("TOKEN"))
