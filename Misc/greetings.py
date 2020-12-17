@@ -15,7 +15,7 @@ class Greetings(commands.Cog):
         return ctx.author.guild_permissions.administrator
 
     @commands.Cog.listener()
-    async def on_command_error(self, ctx, error):
+    async def on_command_error(self, ctx):
         await ctx.send('You are not authorized to use this command. :(')
 
     @commands.Cog.listener()
