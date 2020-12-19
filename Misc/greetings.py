@@ -1,5 +1,6 @@
 import discord
 from discord.ext import commands
+from Shared.guild import Guild
 
 
 class Greetings(commands.Cog):
@@ -15,8 +16,10 @@ class Greetings(commands.Cog):
         return ctx.author.guild_permissions.administrator
 
     @commands.Cog.listener()
-    async def on_command_error(self, ctx):
-        await ctx.send('You are not authorized to use this command. :(')
+    async def on_command_error(self, ctx, error):
+        print(f'{error}')
+        if isinstance(error, commands.CommandNotFound) is False:
+            await ctx.send('You are not authorized to use this command. :(')
 
     @commands.Cog.listener()
     async def on_member_join(self, member):
@@ -53,6 +56,12 @@ class Greetings(commands.Cog):
         self.welcome_enabled = not self.welcome_enabled
         status_string = '' if self.welcome_enabled else 'not '
         await ctx.send(f'I\'m now {status_string}saying hello.')
+
+    @commands.command()
+    async def prefix(self, ctx, arg):
+        guild = Guild(ctx.guild.id, self.bot.database)
+        guild.set_prefix(arg)
+        await ctx.send(f'Prefix now set to {arg}')
 
 
 def setup(bot):
