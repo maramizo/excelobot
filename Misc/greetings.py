@@ -1,6 +1,5 @@
 import discord
 from discord.ext import commands
-from Shared.guild import Guild
 
 
 class Greetings(commands.Cog):
@@ -59,8 +58,7 @@ class Greetings(commands.Cog):
 
     @commands.command()
     async def prefix(self, ctx, arg):
-        guild = Guild(ctx.guild.id, self.bot.database)
-        guild.set_prefix(arg)
+        self.bot.my_guilds.set_prefix(ctx.guild.id, arg)
         await ctx.send(f'Prefix now set to {arg}')
 
 

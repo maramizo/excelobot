@@ -2,27 +2,22 @@ import discord
 from discord.ext import commands
 from dotenv import load_dotenv
 import os
-from Shared.guild import Guild
-from Shared.database import Database
+from Shared.guilds import Guilds
 
 load_dotenv()
 
 intents = discord.Intents.default()
 intents.members = True
 
-database = Database()
-
 
 async def determine_prefix(_bot, message):
     if message.guild:
-        guild = Guild(message.guild.id, _bot.database)
-        return guild.prefix()
+        return bot.my_guilds.get_prefix(message.guild.id)
     else:
         return '.'
 
 
 bot = commands.Bot(command_prefix=determine_prefix, description="", intents=intents)
-bot.database = database
 
 startup_extensions = ["Misc.greetings"]
 
@@ -37,6 +32,7 @@ for extension in startup_extensions:
 @bot.event
 async def on_ready():
     print(f"Connected! \nName: {bot.user.name}\tID: {bot.user.id}\n")
+    bot.my_guilds = Guilds(bot)
 
 
 print('Version: ' + discord.__version__)

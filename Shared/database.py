@@ -24,3 +24,5 @@ class Database:
             {"$set": {setting: setting_val}},
             upsert=True
         )
+
+database = Database()

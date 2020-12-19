@@ -1,13 +1,13 @@
 # Guild class.
 # Contains all meta-information related to guilds.
-# To be shared across all other modules. TODO figure out dependency injection or a way to share this.
+# To be shared across all other modules.
 
 
 class Guild:
     def __init__(self, guild_id, database):
         self.id = guild_id
         self.DB = database
-        self.pre = self.DB.get_setting(self.id, 'prefix')
+        self.load_prefix()
 
         if self.pre is None:
             self.pre = '.'
@@ -20,4 +20,5 @@ class Guild:
         return self.pre
 
     def load_prefix(self):
+        self.pre = self.DB.get_setting(self.id, 'prefix')
         return
