@@ -5,6 +5,8 @@
 from Model.database import database
 from Shared.messages import MessageHandler
 from asyncinit import asyncinit
+import datetime
+from discord import TextChannel
 
 
 @asyncinit
@@ -60,13 +62,27 @@ class Guilds:
     async def load_messages(self, guild_id):
         message_handler = MessageHandler(self.bot, guild_id)
         if message_handler.messages_exist_for_guild():
-            oldest = message_handler.get_oldest_message()
-            # if oldest.date > 1 week ago
-            # get more messages
+            for channel in self.bot.get_guild(guild_id).channels:
+                if isinstance(channel, TextChannel):
+                    oldest = message_handler.get_oldest_message(channel.id)
+
+                    # If there's existing data for this channel, check its date.
+                    if oldest:
+                        date_time_diff = datetime.datetime.now() - oldest.created_at
+                        if(date_time_diff.days < 7):
+                            await message_handler.load_channel_messages(channel.id, oldest)
+                        else:
+                            print(f'got sufficient data for {channel.name}')
+
+                    # Check if there's existing data for this channel now.
+                    else:
+                        await message_handler.load_channel_messages(channel.id)
         else:
-            print(f'Loading messages for guild {guild_id}')
             await message_handler.load_messages()
     
     # TODO get amount of words per user in a channel.
     #  Load all messages from a certain user in DB.
     #  Get total amount of words, divide them by total amount of messages.
+
+    # TODO load messages upon joining a guild.
+    # TODO load all new messages after latest one upon startup.

@@ -1,6 +1,7 @@
 import discord
 from Model.database import database
 import datetime
+from Model.structifier import Struct
 
 
 def valid_message(message):
@@ -15,9 +16,22 @@ class MessageHandler:
         self.guild = bot.get_guild(guild_id)
         self.messages = {}
         self.oldest_message = {}
+        self.load_db_messages()
+        self.new_messages_loaded = False
+        print('Finished loading messages')
+
+    def load_db_messages(self):
+        self.messages = {}
+        messages = database.get_messages(self.guild.id)
+        for channel in self.guild.channels:
+            self.messages[channel.id] = {}
+        if messages:
+            for message in messages:
+                message = Struct(**message)
+                message.id = int(message.id)
+                self.messages[message.channel_id][message.id] = message
 
     def messages_exist_for_guild(self):
-        self.messages = database.get_messages(self.guild.id)
         if self.messages:
             return True
         return False
@@ -32,27 +46,24 @@ class MessageHandler:
                     if not oldest_message or oldest_message.created_at > message.created_at:
                         oldest_message = message
             self.oldest_message = oldest_message
-            # print(f'{oldest_message.author} wrote {oldest_message.content} at {oldest_message.created_at}')
             return oldest_message
         else:
             for message_id in self.messages[channel_id]:
                 message = self.messages[channel_id][message_id]
                 if not oldest_message or oldest_message.created_at > message.created_at:
                     oldest_message = message
-        # print(f'{oldest_message.author} wrote {oldest_message.content} at {oldest_message.created_at}')
-        return oldest_message
+            return oldest_message
 
-    # Load all messages in all channels in the guild
-    # Keep loading messages until date > 1 week OR none found
-    # Store all loaded messages in self.messages[channel.id]
     async def load_messages(self):
-        print(f'load messages called')
         self.messages = {}
+        # Load all messages in all channels in the guild
         for channel in self.guild.channels:
             if channel.type is discord.ChannelType.text:
                 self.messages[channel.id] = {}
+                # Initial messages loading.
                 await self.load_channel_messages(channel.id)
 
+    # Initial load only loads 50 messages, then increments of 50 every time it's called afterwards.
     async def load_channel_messages(self, channel_id, _oldest_message=None, times_called=1, _limit=50):
         try:
             channel = self.bot.get_channel(channel_id)
@@ -69,6 +80,7 @@ class MessageHandler:
             messages_exist = False
             for message in messages:
                 if valid_message(message):
+                    self.new_messages_loaded = True
                     self.messages[channel.id][message.id] = message
                     messages_exist = True
             # If there are any new messages grabbed, continue.
@@ -78,23 +90,35 @@ class MessageHandler:
                 # If there is a valid message in the channel.
                 if oldest_message:
                     date_time_diff = datetime.datetime.now() - oldest_message.created_at
-                    print(
-                        f'Now: {datetime.datetime.now()} - Oldest Message {oldest_message.created_at} - '
-                        f'Channel {oldest_message.channel} - Content {oldest_message.content} - '
-                        f'Time diff: {date_time_diff} : {date_time_diff.days > 6}')
+                    # print(
+                    #     f'Now: {datetime.datetime.now()} - Oldest Message {oldest_message.created_at} - '
+                    #     f'Channel {oldest_message.channel} - Content {oldest_message.content} - '
+                    #     f'Time diff: {date_time_diff} : {date_time_diff.days > 6}')
                     # If the message is younger than a week old.
                     if date_time_diff.days < 7:
                         # Load more messages with this message as the oldest.
                         await self.load_channel_messages(channel.id, oldest_message, times_called + 1, 50)
                     else:
+                        # Store existing messages if there is a message older than a week.
                         self.store_messages(channel.id)
-            else:
+            # If there are no grabbed messages, simply store the existing ones.
+            elif self.new_messages_loaded:
                 self.store_messages(channel.id)
 
-    # TODO Store messages in DB.
     def store_messages(self, channel_id):
-        print(f'storing messages for {channel_id}')
+        formatted_messages = self.format_messages(channel_id)
+        if formatted_messages:
+            database.store_messages(formatted_messages)
 
-    # TODO load oldest message from DB.
-    #  Add a quick check to see if any messages exist before it.
-    #  If they exist use load_channel_messages to load older ones.
+    # Format messages for storage.
+    def format_messages(self, channel_id):
+        formatted_messages = []
+        for message_id in self.messages[channel_id]:
+            message = self.messages[channel_id][message_id]
+            if isinstance(message.author, int):
+                author = message.author
+            else:
+                author = message.author.id
+            formatted_messages.append({'guild_id': self.guild.id, 'channel_id': channel_id, 'author': author,
+                                       'content': message.content, 'created_at': message.created_at, 'id': message.id})
+        return formatted_messages

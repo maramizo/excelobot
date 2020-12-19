@@ -29,7 +29,10 @@ class Database:
         )
 
     def get_messages(self, guild_id):
-        return self.messages.find({'guild_id': guild_id}).sort([('message_date', ASCENDING)]).distinct('message_id')
+        return list(self.messages.find({'guild_id': guild_id}, {'guild_id': 0, '_id': 0}).sort([('created_at', ASCENDING)]))
+
+    def store_messages(self, messages):
+        self.messages.insert_many(messages)
 
 
 database = Database()
