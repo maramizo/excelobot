@@ -19,7 +19,7 @@ async def determine_prefix(_bot, message):
 
 bot = commands.Bot(command_prefix=determine_prefix, description="", intents=intents)
 
-startup_extensions = ["Misc.greetings"]
+startup_extensions = ["Misc.greetings", "Misc.roles"]
 
 for extension in startup_extensions:
     try:
@@ -32,7 +32,7 @@ for extension in startup_extensions:
 @bot.event
 async def on_ready():
     print(f"Connected! \nName: {bot.user.name}\tID: {bot.user.id}\n")
-    bot.my_guilds = Guilds(bot)
+    bot.my_guilds = await Guilds(bot)
 
 
 print('Version: ' + discord.__version__)

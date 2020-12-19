@@ -3,12 +3,8 @@ from discord.ext import commands
 
 
 class Greetings(commands.Cog):
-    welcome_enabled = True
-    goodbye_enabled = True
-
     def __init__(self, bot):
         self.bot = bot
-        self._last_member = None
 
     # Only admins are allowed to use commands within this cog.
     async def cog_check(self, ctx):
@@ -17,12 +13,12 @@ class Greetings(commands.Cog):
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
         print(f'{error}')
-        if isinstance(error, commands.CommandNotFound) is False:
+        if isinstance(error, commands.CheckFailure):
             await ctx.send('You are not authorized to use this command. :(')
 
     @commands.Cog.listener()
     async def on_member_join(self, member):
-        if self.welcome_enabled is False:
+        if self.bot.my_guilds[member.guild.id]['welcome'] is False:
             return
         channel = member.guild.system_channel
         if channel is not None:
@@ -35,7 +31,7 @@ class Greetings(commands.Cog):
     @commands.Cog.listener()
     async def on_member_remove(self, member):
         channel = member.guild.system_channel
-        if self.goodbye_enabled is False:
+        if self.bot.my_guilds[member.guild.id]['goodbye'] is False:
             return
         if channel is not None:
             await channel.send(f'Welcome {member.mention}.')
@@ -45,16 +41,20 @@ class Greetings(commands.Cog):
             await send_channel.send(f'Aww, **{member}** has left. :(')
 
     @commands.command()
-    async def goodbye(self, ctx, *, member: discord.Member = None):
-        self.goodbye_enabled = not self.goodbye_enabled
-        status_string = '' if self.goodbye_enabled else 'not '
+    async def goodbye(self, ctx):
+        goodbye_enabled = self.bot.my_guilds.goodbye_status(ctx.guild.id)
+        goodbye_enabled = not goodbye_enabled
+        status_string = '' if goodbye_enabled else 'not '
         await ctx.send(f'I\'m now {status_string}saying goodbye.')
+        self.bot.my_guilds.save_greeting(ctx.guild.id, 'goodbye', goodbye_enabled)
 
     @commands.command()
-    async def hello(self, ctx, *, member: discord.Member = None):
-        self.welcome_enabled = not self.welcome_enabled
-        status_string = '' if self.welcome_enabled else 'not '
+    async def hello(self, ctx):
+        welcome_enabled = self.bot.my_guilds.welcome_status(ctx.guild.id)
+        welcome_enabled = not welcome_enabled
+        status_string = '' if welcome_enabled else 'not '
         await ctx.send(f'I\'m now {status_string}saying hello.')
+        self.bot.my_guilds.save_greeting(ctx.guild.id, 'welcome', welcome_enabled)
 
     @commands.command()
     async def prefix(self, ctx, arg):
