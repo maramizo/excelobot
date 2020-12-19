@@ -12,7 +12,7 @@ intents.members = True
 
 async def determine_prefix(_bot, message):
     if message.guild:
-        return bot.my_guilds.get_prefix(message.guild.id)
+        return bot.my_guilds.prefix(message.guild.id)
     else:
         return '.'
 

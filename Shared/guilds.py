@@ -2,24 +2,32 @@
 # Loads all guilds data by instantiating Shared.guild for each guild the bot is in.
 # TODO add guilds whenever the bot is added to a new guild.
 # TODO load all messages sent in a guild.
-from Model.guild import Guild
 from Model.database import database
 
 
 class Guilds:
     def __init__(self, bot):
+        # Empty dict of all guilds.
         self.gu = {}
         for guild in bot.guilds:
-            self.gu[guild.id] = Guild(guild.id, database)
-
-    def __setitem__(self, key, value):
-        self.gu[key] = value
-
-    def __getitem__(self, item):
-        return self.gu[item]
+            # Each guild has its own empty dict.
+            self.gu[guild.id] = {}
+            # Load the prefix for each guild.
+            self.load_prefix(guild.id)
 
     def set_prefix(self, _id, prefix):
-        self.gu[_id].set_prefix(prefix)
+        # Set local prefix.
+        self.gu[_id]['pre'] = prefix
+        # Update database to reflect the prefix change.
+        database.set_setting(self.gu[_id], 'prefix', prefix)
 
-    def get_prefix(self, _id):
-        return self.gu[_id].prefix()
+    def prefix(self, _id):
+        return self.gu[_id]['pre']
+
+    def load_prefix(self, _id):
+        # Load prefix from database.
+        self.gu[_id]['pre'] = database.get_setting(self.gu[_id], 'prefix')
+        if self.gu[_id]['pre'] is None:
+            # Default prefix is '.' if no prefix was found.
+            self.gu[_id]['pre'] = '.'
+
