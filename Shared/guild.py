@@ -1,5 +1,5 @@
 # Guild class.
-# Contains all meta-information related to guilds.
+# Contains all meta-information related to one guild.
 # To be shared across all other modules.
 
 

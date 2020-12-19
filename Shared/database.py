@@ -1,3 +1,5 @@
+# Handles all connections to the MongoDB cluster.
+# MongoDB shape: {'guild_id': ID, setting: setting_name}
 from pymongo import MongoClient
 from dotenv import load_dotenv
 import os
@@ -24,5 +26,6 @@ class Database:
             {"$set": {setting: setting_val}},
             upsert=True
         )
+
 
 database = Database()
