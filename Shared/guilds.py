@@ -2,8 +2,8 @@
 # Loads all guilds data by instantiating Shared.guild for each guild the bot is in.
 # TODO add guilds whenever the bot is added to a new guild.
 # TODO load all messages sent in a guild.
-from Shared.guild import Guild
-from Shared.database import database
+from Model.guild import Guild
+from Model.database import database
 
 
 class Guilds:
