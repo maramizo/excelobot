@@ -2,6 +2,7 @@
 Features:
 * Greetings.
 * Dynamic prefixes (based on a connection to MongoDB).
+* Store a week's worth of user messages upon boot.
 
 
 Usage:
@@ -10,7 +11,6 @@ Usage:
 * Prefix command to change the prefix.
 
 Ideas/TODOs:
-* Store all user messages.
 * Grant roles based on activity.
 * Track users based on invitation changes - find out who invited who.
 * Create charts to visualize various data (messages sent per day, leaderboard changes).
