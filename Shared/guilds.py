@@ -19,14 +19,14 @@ class Guilds:
         # Set local prefix.
         self.gu[_id]['pre'] = prefix
         # Update database to reflect the prefix change.
-        database.set_setting(self.gu[_id], 'prefix', prefix)
+        database.set_setting(_id, 'prefix', prefix)
 
     def prefix(self, _id):
         return self.gu[_id]['pre']
 
     def load_prefix(self, _id):
         # Load prefix from database.
-        self.gu[_id]['pre'] = database.get_setting(self.gu[_id], 'prefix')
+        self.gu[_id]['pre'] = database.get_setting(_id, 'prefix')
         if self.gu[_id]['pre'] is None:
             # Default prefix is '.' if no prefix was found.
             self.gu[_id]['pre'] = '.'
