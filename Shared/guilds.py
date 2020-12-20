@@ -8,6 +8,9 @@ from asyncinit import asyncinit
 import datetime
 from discord import TextChannel
 
+# Guilds Class
+# Acts as a wrapper class for database & messages classes.
+# Handles all the logic required in commands to prevent class confusion.
 
 @asyncinit
 class Guilds:
@@ -16,6 +19,7 @@ class Guilds:
         self.bot = bot
         # Empty dict of all guilds.
         self.guilds = {}
+        self.message_handler = {}
         for guild in bot.guilds:
             # Each guild has its own empty dict.
             self.guilds[guild.id] = {}
@@ -23,6 +27,7 @@ class Guilds:
             self.load_prefix(guild.id)
             # Load greeting settings for each guild.
             self.load_greetings(guild.id)
+            self.message_handler[guild.id] = MessageHandler(self.bot, guild.id)
             # Load messages for each guild.
             await self.load_messages(guild.id)
 
@@ -53,36 +58,40 @@ class Guilds:
     def goodbye_status(self, guild_id):
         return self.guilds[guild_id]['goodbye']
 
-    # Load all messages for guild.
-    # Get existing messages for each guild channel.
-    # If any are found, get oldest.
-    # If the oldest is less than a week ago, get more messages.
-    # Get messages until the date is more than a week ago or none are found.
-    
+    # Instantiates a MessageHandler() object for each guild.
+    # Loops over all channels in guild.
+    # Checks if channel is text, if it is, gets the oldest message.
+    # If the oldest is younger than a week, requests more data.
+    # If there's no existing data, it loads more messages using API.
+    # TODO move the loading logic of messages from here to MessageHandler()
     async def load_messages(self, guild_id):
-        message_handler = MessageHandler(self.bot, guild_id)
-        if message_handler.messages_exist_for_guild():
+        if self.message_handler[guild_id].messages_exist_for_guild():
             for channel in self.bot.get_guild(guild_id).channels:
                 if isinstance(channel, TextChannel):
-                    oldest = message_handler.get_oldest_message(channel.id)
+                    oldest = self.message_handler[guild_id].get_oldest_message(channel.id)
 
                     # If there's existing data for this channel, check its date.
                     if oldest:
                         date_time_diff = datetime.datetime.now() - oldest.created_at
                         if(date_time_diff.days < 7):
-                            await message_handler.load_channel_messages(channel.id, oldest)
-                        else:
-                            print(f'got sufficient data for {channel.name}')
+                            await self.message_handler[guild_id].load_channel_messages(channel.id, oldest)
 
                     # Check if there's existing data for this channel now.
                     else:
-                        await message_handler.load_channel_messages(channel.id)
+                        await self.message_handler[guild_id].load_channel_messages(channel.id)
         else:
-            await message_handler.load_messages()
+            await self.message_handler[guild_id].load_messages()
     
     # TODO get amount of words per user in a channel.
     #  Load all messages from a certain user in DB.
     #  Get total amount of words, divide them by total amount of messages.
+    def count_total_user_messages(self, guild_id, user_id):
+        count = self.message_handler[guild_id].total_messages(user_id)
+        return count
+
+    def count_total_user_words(self, guild_id, user_id):
+        count = self.message_handler[guild_id].total_word_count(user_id)
+        return count
 
     # TODO load messages upon joining a guild.
     # TODO load all new messages after latest one upon startup.

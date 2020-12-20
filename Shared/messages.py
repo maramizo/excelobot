@@ -9,6 +9,20 @@ def valid_message(message):
         return True
     return False
 
+def is_user_message(message, user_id):
+    if isinstance(message.author, int):
+        author = message.author
+    else:
+        author = message.author.id
+    return author == user_id
+
+# MessageHandler class:
+# Instantiated for each guild.
+# Loads user's messages from DB.
+# Loads extra messages using Discord API.
+# Stores data.
+# Contains all the logic for how to load and save messages.
+
 
 class MessageHandler:
     def __init__(self, bot, guild_id):
@@ -18,8 +32,8 @@ class MessageHandler:
         self.oldest_message = {}
         self.load_db_messages()
         self.new_messages_loaded = False
-        print('Finished loading messages')
 
+    # Loads messages for current guild from the database.
     def load_db_messages(self):
         self.messages = {}
         messages = database.get_messages(self.guild.id)
@@ -31,11 +45,13 @@ class MessageHandler:
                 message.id = int(message.id)
                 self.messages[message.channel_id][message.id] = message
 
+    # Checks if there are any messages in this instance.
     def messages_exist_for_guild(self):
         if self.messages:
             return True
         return False
 
+    # Loops over existing (stored) messages and returns the oldest one.
     def get_oldest_message(self, channel_id=None):
         oldest_message = {}
         if channel_id is None:
@@ -54,6 +70,7 @@ class MessageHandler:
                     oldest_message = message
             return oldest_message
 
+    # Loops over all of the channels and calls load_channel_messages().
     async def load_messages(self):
         self.messages = {}
         # Load all messages in all channels in the guild
@@ -72,7 +89,7 @@ class MessageHandler:
             else:
                 messages = await channel.history(limit=_limit * times_called).flatten()
         except discord.errors.Forbidden:
-            print("Don't have access to this channel. SKIPPING")
+            print(f"Don't have access to channel {channel}. SKIPPING")
         except discord.errors.HTTPException:
             print('Request to get messages failed')
         else:
@@ -122,3 +139,23 @@ class MessageHandler:
             formatted_messages.append({'guild_id': self.guild.id, 'channel_id': channel_id, 'author': author,
                                        'content': message.content, 'created_at': message.created_at, 'id': message.id})
         return formatted_messages
+
+    # Counts user messages sent across a guild.
+    def total_messages(self, user_id):
+        count = 0
+        for channel_id in self.messages:
+            for message_id in self.messages[channel_id]:
+                message = self.messages[channel_id][message_id]
+                if is_user_message(message, user_id):
+                    count += 1
+        return count
+
+    def total_word_count(self, user_id):
+        count = 0
+        for channel_id in self.messages:
+            for message_id in self.messages[channel_id]:
+                message = self.messages[channel_id][message_id]
+                if is_user_message(message, user_id):
+                    content = message.content
+                    count += len(content.split())
+        return count

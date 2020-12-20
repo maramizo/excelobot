@@ -14,8 +14,14 @@ class Roles(commands.Cog):
         return ctx.author.guild_permissions.administrator
 
     @commands.command()
-    async def activityrole(self, ctx):
-        self.bot.my_guilds.load_messages(ctx.guild.id)
+    async def msgtotal(self, ctx):
+        count = self.bot.my_guilds.count_total_user_messages(ctx.guild.id, ctx.author.id)
+        return await ctx.send(f'Your total count of messages in this server for the past week is {count}.')
+
+    @commands.command()
+    async def wordstotal(self, ctx):
+        count = self.bot.my_guilds.count_total_user_words(ctx.guild.id, ctx.author.id)
+        return await ctx.send(f'Your total count of words in this server for the past week is {count}.')
 
 
 def setup(bot):
