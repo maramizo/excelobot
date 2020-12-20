@@ -82,6 +82,7 @@ class MessageHandler:
 
     # Initial load only loads 50 messages, then increments of 50 every time it's called afterwards.
     async def load_channel_messages(self, channel_id, _oldest_message=None, times_called=1, _limit=50):
+        channel = {}
         try:
             channel = self.bot.get_channel(channel_id)
             if _oldest_message:
