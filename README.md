@@ -3,6 +3,7 @@ Features:
 * Greetings.
 * Dynamic prefixes (based on a connection to MongoDB).
 * Store a week's worth of user messages upon boot.
+* Display user message count on command.
 
 
 Usage:
