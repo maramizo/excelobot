@@ -3,7 +3,7 @@
 # TODO add guilds whenever the bot is added to a new guild.
 # TODO load all messages sent in a guild.
 from Model.database import database
-from Shared.messages import MessageHandler
+from Model.messages import MessageHandler
 from asyncinit import asyncinit
 import datetime
 from discord import TextChannel

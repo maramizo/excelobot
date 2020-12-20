@@ -12,14 +12,14 @@ intents.members = True
 
 async def determine_prefix(_bot, message):
     if message.guild:
-        return bot.my_guilds.prefix(message.guild.id)
+        return _bot.my_guilds.prefix(message.guild.id)
     else:
         return '.'
 
 
 bot = commands.Bot(command_prefix=determine_prefix, description="", intents=intents)
 
-startup_extensions = ["Misc.greetings", "Misc.roles"]
+startup_extensions = ["Extensions.greetings", "Extensions.roles"]
 
 for extension in startup_extensions:
     try:

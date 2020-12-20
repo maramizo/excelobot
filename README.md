@@ -16,5 +16,12 @@ Ideas/TODOs:
 * Create charts to visualize various data (messages sent per day, leaderboard changes).
 * Make charts of most used words for each user.
 * Make charts to show the specific hours of when a user is usually active.
+* Create a web-interface for the bot to visualize the data.
+
+Hierarchy explanation:
+* Extensions - contains all the cogs and bot loaded extensions, grouped by functionality.
+* Model - contains different models used by classes.
+* Shared - contains classes that are loaded into the bot itself.
+* Tasks - contains automated tasks that are expected to run regardless of commands (some may need to be initialized or set to run in the first place, though).
 
 **"New ideas are hereby needed!"** - Paul Dirac.
