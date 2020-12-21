@@ -3,6 +3,7 @@ from discord.ext import commands
 from dotenv import load_dotenv
 import os
 from Shared.guilds import Guilds
+from Tasks.automations import Automations
 
 load_dotenv()
 
@@ -33,6 +34,7 @@ for extension in startup_extensions:
 async def on_ready():
     print(f"Connected! \nName: {bot.user.name}\tID: {bot.user.id}\n")
     bot.my_guilds = await Guilds(bot)
+    tasks = await Automations(bot)
 
 
 print('Version: ' + discord.__version__)

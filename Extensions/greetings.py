@@ -10,11 +10,19 @@ class Greetings(commands.Cog):
     async def cog_check(self, ctx):
         return ctx.author.guild_permissions.administrator
 
+    # TODO move on_command_error to an error handling class.
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
         print(f'{error}')
         if isinstance(error, commands.CheckFailure):
             await ctx.send('You are not authorized to use this command. :(')
+        elif isinstance(error, commands.MissingRequiredArgument):
+            params = ''
+            for param in ctx.command.clean_params:
+                params = f'{params} {param}'
+            await ctx.send(f'**Usage:**\n{ctx.prefix}{ctx.command.name}{params}')
+        else:
+            await ctx.send(error)
 
     @commands.Cog.listener()
     async def on_member_join(self, member):

@@ -9,12 +9,16 @@ def valid_message(message):
         return True
     return False
 
-def is_user_message(message, user_id):
+
+def is_valid_user_message(message, user_id, after_date=None):
     if isinstance(message.author, int):
         author = message.author
     else:
         author = message.author.id
+    if after_date is not None:
+        return author == user_id and (after_date is None or message.created_at > after_date)
     return author == user_id
+
 
 # MessageHandler class:
 # Instantiated for each guild.
@@ -52,23 +56,28 @@ class MessageHandler:
         return False
 
     # Loops over existing (stored) messages and returns the oldest one.
-    def get_oldest_message(self, channel_id=None):
+    # If no channel_id is passed, it loops over all guilds.
+    # If no user_id is passed, it gets oldest message of any user.
+    # If no after_date is passed, it gets the oldest message regardless of date.
+    def get_oldest_message(self, channel_id=None, user_id=None, after_date=None):
         oldest_message = {}
         if channel_id is None:
             # If no specific channel is given, find oldest message in entire server.
             for channel in self.messages:
                 for message_id in self.messages[channel]:
                     message = self.messages[channel][message_id]
-                    if not oldest_message or oldest_message.created_at > message.created_at:
+                    if (not oldest_message or (
+                            after_date is not None and oldest_message.created_at > message.created_at
+                            and oldest_message.created_at > after_date)) \
+                            and (user_id is None or is_valid_user_message(message, user_id, after_date)):
                         oldest_message = message
             self.oldest_message = oldest_message
-            return oldest_message
         else:
             for message_id in self.messages[channel_id]:
                 message = self.messages[channel_id][message_id]
                 if not oldest_message or oldest_message.created_at > message.created_at:
                     oldest_message = message
-            return oldest_message
+        return oldest_message
 
     # Loops over all of the channels and calls load_channel_messages().
     async def load_messages(self):
@@ -142,21 +151,46 @@ class MessageHandler:
         return formatted_messages
 
     # Counts user messages sent across a guild.
-    def total_messages(self, user_id):
+    def total_messages(self, user_id, after_date=None):
         count = 0
         for channel_id in self.messages:
             for message_id in self.messages[channel_id]:
                 message = self.messages[channel_id][message_id]
-                if is_user_message(message, user_id):
+                if is_valid_user_message(message, user_id, after_date):
                     count += 1
         return count
 
-    def total_word_count(self, user_id):
+    def total_word_count(self, user_id, after_date=None):
         count = 0
         for channel_id in self.messages:
             for message_id in self.messages[channel_id]:
                 message = self.messages[channel_id][message_id]
-                if is_user_message(message, user_id):
+                if is_valid_user_message(message, user_id, after_date):
                     content = message.content
                     count += len(content.split())
         return count
+
+    def average_word_count(self, user_id, after_date=None):
+        count = self.total_word_count(user_id, after_date)
+        if count:
+            if after_date is not None:
+                date_diff = datetime.datetime.now() - after_date
+            else:
+                oldest_message = self.get_oldest_message(user_id=user_id)
+                if oldest_message:
+                    date_diff = datetime.datetime.now() - oldest_message.created_at
+                else:
+                    date_diff = 1
+            days = date_diff.days
+            return count / days
+        return 0
+
+    def average_message_count(self, user_id, after_date=None):
+        count = self.total_messages(user_id, after_date)
+        if after_date is not None:
+            date_diff = datetime.datetime.now() - after_date
+        else:
+            oldest_message = self.get_oldest_message(user_id=user_id)
+            date_diff = datetime.datetime.now() - oldest_message.created_at
+        days = date_diff.days
+        return count / days

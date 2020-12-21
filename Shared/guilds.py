@@ -1,7 +1,7 @@
 # Guilds class.
 # Loads all guilds data by instantiating Shared.guild for each guild the bot is in.
 # TODO add guilds whenever the bot is added to a new guild.
-# TODO load all messages sent in a guild.
+# TODO load all new messages sent in a guild.
 from Model.database import database
 from Model.messages import MessageHandler
 from asyncinit import asyncinit
@@ -27,36 +27,57 @@ class Guilds:
             self.load_prefix(guild.id)
             # Load greeting settings for each guild.
             self.load_greetings(guild.id)
-            self.message_handler[guild.id] = MessageHandler(self.bot, guild.id)
+            # Load activity role for each guild.
+            self.load_activity_role(guild.id)
+            # Load average words for the activity role
+            self.load_avg_words_for_activity_role(guild.id)
             # Load messages for each guild.
+            self.message_handler[guild.id] = MessageHandler(self.bot, guild.id)
             await self.load_messages(guild.id)
 
+    # Set prefix for the guild.
     def set_prefix(self, guild_id, prefix):
         # Set local prefix.
         self.guilds[guild_id]['pre'] = prefix
         # Update database to reflect the prefix change.
         database.set_setting(guild_id, 'prefix', prefix)
 
+    # Return prefix for the guild.
     def prefix(self, guild_id):
         return self.guilds[guild_id]['pre']
 
+    # Load prefix from DB.
     def load_prefix(self, guild_id):
         # Load prefix from database.
         self.guilds[guild_id]['pre'] = database.get_setting(guild_id, 'prefix', '.')
 
+    # Load greetings status from DB.
     def load_greetings(self, guild_id):
         self.guilds[guild_id]['welcome'] = database.get_setting(guild_id, 'welcome', True)
         self.guilds[guild_id]['goodbye'] = database.get_setting(guild_id, 'goodbye', True)
 
+    # Save greetings status into DB.
     def save_greeting(self, guild_id, greeting, greeting_val):
         database.set_setting(guild_id, greeting, greeting_val)
         self.guilds[guild_id][greeting] = greeting_val
 
+    # Return welcome status.
     def welcome_status(self, guild_id):
         return self.guilds[guild_id]['welcome']
 
+    # Return goodbye status.
     def goodbye_status(self, guild_id):
         return self.guilds[guild_id]['goodbye']
+
+    def set_avg_words_for_activity_role(self, guild_id, words):
+        database.set_setting(guild_id, 'minimum_words', words)
+        self.guilds[guild_id]['minimum_words'] = words
+
+    def get_avg_words_for_activity_role(self, guild_id):
+        return self.guilds[guild_id]['minimum_words']
+
+    def load_avg_words_for_activity_role(self, guild_id):
+        self.guilds[guild_id]['activity_role'] = database.get_setting(guild_id, 'activity_role')
 
     # Instantiates a MessageHandler() object for each guild.
     # Loops over all channels in guild.
@@ -82,16 +103,34 @@ class Guilds:
         else:
             await self.message_handler[guild_id].load_messages()
     
-    # TODO get amount of words per user in a channel.
-    #  Load all messages from a certain user in DB.
-    #  Get total amount of words, divide them by total amount of messages.
-    def count_total_user_messages(self, guild_id, user_id):
-        count = self.message_handler[guild_id].total_messages(user_id)
+    # Get amount of messages sent by a user after a specific date.
+    def count_total_user_messages(self, guild_id, user_id, after_date=None):
+        count = self.message_handler[guild_id].total_messages(user_id, after_date)
         return count
 
-    def count_total_user_words(self, guild_id, user_id):
-        count = self.message_handler[guild_id].total_word_count(user_id)
+    # Get amount of words sent by a user after a specific date.
+    def count_total_user_words(self, guild_id, user_id, after_date=None):
+        count = self.message_handler[guild_id].total_word_count(user_id, after_date)
         return count
 
+    def count_avg_user_messages(self, guild_id, user_id, after_date=None):
+        count = self.message_handler[guild_id].average_message_count(user_id, after_date)
+        return count
+
+    def count_avg_user_words(self, guild_id, user_id, after_date=None):
+        count = self.message_handler[guild_id].average_word_count(user_id, after_date)
+        return count
+
+    def set_activity_role(self, guild_id, role):
+        self.guilds[guild_id]['activity_role'] = role.id
+        database.set_setting(guild_id, 'activity_role', role.id)
+        return
+
+    def get_activity_role(self, guild_id):
+        return self.guilds[guild_id]['activity_role']
+
+    def load_activity_role(self, guild_id):
+        self.guilds[guild_id]['activity_role'] = database.get_setting(guild_id, 'activity_role')
+        return
     # TODO load messages upon joining a guild.
     # TODO load all new messages after latest one upon startup.
