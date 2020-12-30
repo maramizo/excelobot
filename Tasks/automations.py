@@ -50,6 +50,6 @@ class Automations:
             print(
                 f"{member} had {avg_word_count} word average per day. Granting them the "
                 f"{role} role")
-        else:
-            print(f"{member} had {avg_word_count} word average per day. They're not getting jack.")
+        # else:
+        #     print(f"{member} had {avg_word_count} word average per day. They're not getting jack.")
         return

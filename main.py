@@ -20,7 +20,7 @@ async def determine_prefix(_bot, message):
 
 bot = commands.Bot(command_prefix=determine_prefix, description="", intents=intents)
 
-startup_extensions = ["Extensions.greetings", "Extensions.roles"]
+startup_extensions = ["Extensions.greetings", "Extensions.roles", "Extensions.movies"]
 
 for extension in startup_extensions:
     try:
